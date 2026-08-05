@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0F6E56">
+<title>Half Marathon Plan</title>
+<style>
+  :root{
+    --ink:#1A1A1A; --muted:#6B6B6B; --line:#E6E6E6; --bg:#FBFBFA;
+    --teal:#0F6E56; --teal-lt:#E1F5EE; --court:#B45309; --court-bg:#FBEBD7;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5; font-size:16px;
+    padding-bottom:80px;}
+  .wrap{max-width:640px; margin:0 auto;}
+
+  header{background:linear-gradient(135deg,#0F6E56,#0A5341); color:#fff;
+    padding:28px 20px 22px; position:relative;}
+  header h1{margin:0; font-size:26px; font-weight:700; letter-spacing:-0.5px;}
+  header .sub{opacity:.9; font-size:14px; margin-top:4px;}
+  .racebox{background:rgba(255,255,255,.14); border-radius:12px; padding:12px 14px;
+    margin-top:16px; display:flex; justify-content:space-between; align-items:center;}
+  .racebox .r-label{font-size:12px; opacity:.85; text-transform:uppercase; letter-spacing:.5px;}
+  .racebox .r-date{font-size:17px; font-weight:600; margin-top:2px;}
+  .racebox .r-count{text-align:right;}
+  .racebox .r-count .n{font-size:22px; font-weight:700;}
+  .racebox .r-count .l{font-size:11px; opacity:.85;}
+
+  .tabs{display:flex; gap:6px; padding:14px 16px 4px; overflow-x:auto; position:sticky; top:0;
+    background:var(--bg); z-index:20; -webkit-overflow-scrolling:touch;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto; padding:8px 14px; border-radius:20px; border:1px solid var(--line);
+    background:#fff; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;
+    white-space:nowrap; transition:all .15s;}
+  .tab.active{color:#fff; border-color:transparent;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:10px 14px; padding:12px 18px 6px; font-size:12px; color:var(--muted);}
+  .legend .li{display:flex; align-items:center; gap:5px;}
+  .dot{width:10px; height:10px; border-radius:3px; flex:0 0 auto;}
+  .dot.easy{background:#9FE1CB;} .dot.long{background:#0F6E56;}
+  .dot.hard{background:#E0724A;} .dot.court{background:#E0A24E;}
+  .dot.court{background:#E0A24E;} .dot.rest{background:#D9D9D9;}
+
+  .phase-head{margin:18px 16px 8px; padding:8px 14px; border-radius:10px;
+    font-size:13px; font-weight:700; letter-spacing:.3px;}
+
+  .week{background:var(--card); margin:10px 14px; border-radius:14px; overflow:hidden;
+    border:1px solid var(--line); box-shadow:0 1px 2px rgba(0,0,0,.03);}
+  .week-hd{display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; cursor:pointer; user-select:none;}
+  .week-hd .left{display:flex; align-items:center; gap:12px;}
+  .wk-badge{width:38px; height:38px; border-radius:10px; display:flex; align-items:center;
+    justify-content:center; font-weight:700; font-size:15px; flex:0 0 auto;}
+  .wk-meta .t{font-weight:600; font-size:15px;}
+  .wk-meta .s{font-size:12.5px; color:var(--muted); margin-top:1px;}
+  .wk-right{display:flex; align-items:center; gap:10px;}
+  .vol-pill{font-size:12px; font-weight:600; color:var(--teal); background:var(--teal-lt);
+    padding:4px 9px; border-radius:8px; white-space:nowrap;}
+  .chev{color:var(--muted); font-size:13px; transition:transform .2s;}
+  .week.open .chev{transform:rotate(90deg);}
+
+  .week-body{display:none; padding:0 12px 12px;}
+  .week.open .week-body{display:block;}
+  .day{display:flex; align-items:flex-start; gap:10px; padding:9px 6px; border-top:1px solid #F2F2F2;}
+  .day .dl{flex:0 0 34px; font-size:12px; font-weight:700; color:var(--muted); padding-top:2px;}
+  .day .db{flex:1; font-size:14px;}
+  .day .tag{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px;
+    border-radius:6px; margin-left:0; vertical-align:middle;}
+  .t-easy{color:#0A6E52;} .t-easy .tag{background:#DFF3EB; color:#0A6E52;}
+  .t-long{color:#0F6E56; font-weight:600;} .t-long .tag{background:#0F6E56; color:#fff;}
+  .t-hard{color:#B4491F; font-weight:600;} .t-hard .tag{background:#F3E0D6; color:#B4491F;}
+  .t-court{color:#B45309; font-weight:600;} .t-court .tag{background:var(--court-bg); color:#B45309;}
+  .t-rest{color:#9A9A9A;} .t-rest .tag{background:#EEE; color:#8A8A8A;}
+  .t-recovery{color:#5B5591;} .t-recovery .tag{background:#EAE8FB; color:#5B5591;}
+  .t-race{color:#0F6E56; font-weight:700;} .t-race .tag{background:#0F6E56; color:#fff;}
+  .day.weekend{background:#FDF7EF; border-radius:8px;}
+  .day.raceday{background:var(--teal-lt); border-radius:8px;}
+
+  .note{margin:8px 4px 2px; padding:10px 12px; background:#F7F7F5; border-left:3px solid var(--teal);
+    border-radius:6px; font-size:12.5px; color:#555; font-style:italic;}
+
+  .guide-btn{display:block; margin:16px 16px 0; padding:14px; text-align:center;
+    background:#fff; border:1px solid var(--line); border-radius:12px; font-weight:600;
+    font-size:14px; color:var(--teal); cursor:pointer;}
+  .guide{display:none; margin:8px 16px 0; padding:4px 4px 8px;}
+  .guide.open{display:block;}
+  .guide h3{font-size:15px; margin:16px 4px 6px; color:var(--teal);}
+  .guide p{font-size:13.5px; color:#444; margin:6px 4px;}
+  .guide ul{margin:6px 4px; padding-left:20px;}
+  .guide li{font-size:13.5px; color:#444; margin:5px 0;}
+  .guide .warn{background:#FBEBD7; border-radius:8px; padding:4px 12px; margin-top:8px;}
+  .guide .warn h3{color:var(--court);}
+
+  footer{text-align:center; padding:24px 16px; font-size:12px; color:#AAA;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Half Marathon Plan</h1>
+    <div class="sub">51 weeks · built around your pickleball</div>
+    <div class="racebox">
+      <div>
+        <div class="r-label">Race day</div>
+        <div class="r-date">Sun, July 25, 2027</div>
+      </div>
+      <div class="r-count">
+        <div class="n" id="countdown">—</div>
+        <div class="l">weeks to go</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="legend">
+    <div class="li"><span class="dot easy"></span>Easy</div>
+    <div class="li"><span class="dot long"></span>Long run</div>
+    <div class="li"><span class="dot hard"></span>Key session</div>
+    <div class="li"><span class="dot court"></span>Court sport</div>
+    <div class="li"><span class="dot rest"></span>Rest</div>
+  </div>
+
+  <div id="weeks"></div>
+
+  <div class="guide-btn" onclick="document.getElementById('guide').classList.toggle('open'); this.textContent=document.getElementById('guide').classList.contains('open')?'▲ Hide the essentials':'▼ Read the essentials (how this works)';">▼ Read the essentials (how this works)</div>
+  <div class="guide" id="guide">
+    <h3>The core idea</h3>
+    <p>Your weekends are for pickleball. Everything else is arranged around that. Long runs go on <b>Thursday</b> — the day furthest from your weekend court load. Hard running (tempo, intervals) goes <b>Tuesday</b>. Monday is recovery.</p>
+
+    <h3>Slow your easy runs down</h3>
+    <p>Your data showed a 166 bpm average — you run easy miles too hard. Keep easy runs at 9:30–10:15/mi, fully conversational. This builds the engine that lets you hold race pace. Save hard efforts for the marked key sessions.</p>
+
+    <h3>Pickleball plan</h3>
+    <ul>
+      <li><b>Phases 1–2</b> (Aug–Feb): keep full pickleball, both weekend days.</li>
+      <li><b>Phases 3–4</b> (Feb–Jul): drop to once a week (Saturday). Sunday becomes a recovery + strength day. This frees the energy the hard running needs.</li>
+      <li>Biweekly tennis/badminton: only in Phases 1–2, on Wednesday, replacing that day's easy run.</li>
+    </ul>
+
+    <div class="warn">
+      <h3>Protect your knees</h3>
+      <ul>
+        <li><b>Strength train 2×/week</b> — glutes, hamstrings, quads, single-leg work. With all the lateral court movement this is your #1 insurance, not optional.</li>
+        <li>Warm up before court sessions, not just runs.</li>
+        <li>Sharp or lingering knee pain = stop, for both running and court. Soreness is fine; joint pain that lasts days means back off and see a physio.</li>
+      </ul>
+    </div>
+
+    <h3>On the sub-8:00 goal</h3>
+    <p>It's ambitious from a once-a-week base, but a year is enough to take a real shot. Reassess at the end of Phase 3 (late March 2027): if tempo runs say sub-8:00 is on, push; if 8:15–8:30 is smarter, that's still an excellent first half. Finishing healthy, pickleball intact, beats chasing a pace and getting hurt.</p>
+  </div>
+
+  <footer>Tap any week to expand · Add the .ics file to your calendar for daily reminders</footer>
+</div>
+
+<script>
+const WEEKS = [{"n": 1, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Aug 03", "vol": "6 mi", "long": "3 mi", "note": "Slow down. Both runs fully conversational. HR should drop vs your usual.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 3 mi @ 9:45-10:15"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 3 mi @ 9:45-10:15"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 2, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Aug 10", "vol": "6.5 mi", "long": "3.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 3.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "court", "txt": "Tennis/Badminton 2h"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 3 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 3, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Aug 17", "vol": "7.5 mi", "long": "4 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 3.5 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 4, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Aug 24", "vol": "7.5 mi", "long": "4 mi", "note": "Cutback-ish — hold steady, let the body adapt.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "court", "txt": "Tennis/Badminton 2h"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 3.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 5, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Aug 31", "vol": "8.5 mi", "long": "4.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 6, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Sep 07", "vol": "11.5 mi", "long": "4.5 mi", "note": "Add a 3rd day — keep all easy. This is the big habit jump.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 3 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 7, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Sep 14", "vol": "12 mi", "long": "5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 3 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 8, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Sep 21", "vol": "12.5 mi", "long": "5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 3.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 9, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Sep 28", "vol": "11 mi", "long": "4 mi", "note": "Cutback week — recover, absorb.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 3 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 10, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Oct 05", "vol": "13.5 mi", "long": "5.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 11, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Oct 12", "vol": "14.5 mi", "long": "6 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 12, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Oct 19", "vol": "14.5 mi", "long": "6 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 13, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Oct 26", "vol": "13 mi", "long": "5 mi", "note": "Cutback week.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 14, "pc": "P1", "pname": "Base & Habit", "pink": "#0C447C", "pbg": "#E6F1FB", "dates": "Nov 02", "vol": "15 mi", "long": "6.5 mi", "note": "Introduce strides: 4x20s relaxed pickups after an easy run. Not sprints.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 6.5 mi"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi + 4x20s strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 15, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Nov 09", "vol": "16 mi", "long": "7 mi", "note": "Long run becomes the anchor. Keep it slow — time on feet matters more than pace.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 7 mi @ 9:45-10:15"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 16, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Nov 16", "vol": "16 mi", "long": "7 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "court", "txt": "Tennis/Badminton 2h"}, {"d": "Thu", "t": "long", "txt": "Long 7 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 17, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Nov 23", "vol": "17.5 mi", "long": "8 mi", "note": "Matches your longest-ever run — but now at true easy effort.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 8 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 18, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Nov 30", "vol": "14.5 mi", "long": "6 mi", "note": "Cutback week.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "court", "txt": "Tennis/Badminton 2h"}, {"d": "Thu", "t": "long", "txt": "Long 6 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 19, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Dec 07", "vol": "21 mi", "long": "8 mi", "note": "Add a 4th day (all easy). Frequency > any single hard session.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 8 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 20, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Dec 14", "vol": "21.5 mi", "long": "8.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Thu", "t": "long", "txt": "Long 8.5 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 21, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Dec 21", "vol": "22.5 mi", "long": "9 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 9 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 22, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Dec 28", "vol": "16 mi", "long": "7 mi", "note": "Cutback — drop to 3 days, recover well.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "court", "txt": "Tennis/Badminton 2h"}, {"d": "Thu", "t": "long", "txt": "Long 7 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 23, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Jan 04", "vol": "22.5 mi", "long": "9 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 9 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 24, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Jan 11", "vol": "24 mi", "long": "9.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 9.5 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4.5 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 25, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Jan 18", "vol": "25 mi", "long": "10 mi", "note": "First double-digit long run. Big milestone.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 10 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 26, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Jan 25", "vol": "16 mi", "long": "7 mi", "note": "Cutback week.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "court", "txt": "Tennis/Badminton 2h"}, {"d": "Thu", "t": "long", "txt": "Long 7 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 27, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Feb 01", "vol": "25 mi", "long": "10 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi + strides"}, {"d": "Thu", "t": "long", "txt": "Long 10 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 28, "pc": "P2", "pname": "Aerobic Build", "pink": "#085041", "pbg": "#E1F5EE", "dates": "Feb 08", "vol": "26 mi", "long": "10 mi", "note": "End of base. You now have a real aerobic engine. Speed work starts next.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 10 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "court", "txt": "Pickleball 2.5h"}], "race": false}, {"n": 29, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Feb 15", "vol": "22.5 mi", "long": "9 mi", "note": "First tempo run. 8:15 pace should feel 'comfortably hard,' not a race.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Tempo: 1mi easy + 2mi @ 8:15 + 1mi easy"}, {"d": "Wed", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 9 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 30, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Feb 22", "vol": "24 mi", "long": "10 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Tue", "t": "hard", "txt": "Tempo: 1mi easy + 2.5mi @ 8:10 + 1mi easy"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 10 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 31, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Mar 01", "vol": "25.5 mi", "long": "10 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Tempo: 1mi easy + 3mi @ 8:05 + 1mi easy"}, {"d": "Wed", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 10 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 32, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Mar 08", "vol": "17 mi", "long": "8 mi", "note": "Cutback week.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 8 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 33, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Mar 15", "vol": "26 mi", "long": "10.5 mi", "note": "Intervals sharpen leg speed. 7:45/mi pace for the 800s.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Intervals: 6x800m @ 7:45 w/ 400m jog"}, {"d": "Wed", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 10.5 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 34, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Mar 22", "vol": "27.5 mi", "long": "11 mi", "note": "Tempo now AT goal pace. Feel how 8:00 sits.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "hard", "txt": "Tempo: 1mi easy + 3.5mi @ 8:00 + 1mi easy"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 11 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 35, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Mar 29", "vol": "27.5 mi", "long": "11 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Intervals: 5x1000m @ 7:50 w/ 400m jog"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "long", "txt": "Long 11 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 36, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Apr 05", "vol": "17 mi", "long": "8 mi", "note": "Cutback week.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 8 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 37, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Apr 12", "vol": "26 mi", "long": "11 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Tempo: 4mi @ 8:00 (continuous)"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "long", "txt": "Long 11 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 38, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Apr 19", "vol": "28 mi", "long": "11.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Tue", "t": "hard", "txt": "Intervals: 4x1200m @ 7:50"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 11.5 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 39, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "Apr 26", "vol": "28.5 mi", "long": "11.5 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Tempo: 5mi @ 8:05"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "long", "txt": "Long 11.5 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 40, "pc": "P3", "pname": "Strength & Speed", "pink": "#854F0B", "pbg": "#FAEEDA", "dates": "May 03", "vol": "18.5 mi", "long": "9 mi", "note": "Cutback. Assess: is 8:00 pace feeling sustainable? We recalibrate the goal here.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 9 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 4.5 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 41, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "May 10", "vol": "29 mi", "long": "12 mi", "note": "Race-specific work begins. Practice goal pace on tired-ish legs.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Goal-pace: 2mi easy + 4mi @ 7:55 + 1mi easy"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "long", "txt": "Long 12 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 42, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "May 17", "vol": "29.5 mi", "long": "12 mi", "note": "", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Tue", "t": "hard", "txt": "Intervals: 5x1000m @ 7:40"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 12 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 43, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "May 24", "vol": "33 mi", "long": "12.5 mi", "note": "Longest goal-pace block. This is the key confidence session.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Goal-pace: 6mi @ 7:55 w/in a 9mi run"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "long", "txt": "Long 12.5 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 44, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "May 31", "vol": "19 mi", "long": "9 mi", "note": "Cutback week.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 9 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi + strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 45, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "Jun 07", "vol": "31.5 mi", "long": "12 mi", "note": "Finish the long run at goal pace — simulates the race finish.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Goal-pace: 7mi @ 7:55"}, {"d": "Wed", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Thu", "t": "long", "txt": "Long 12 mi (last 3 @ goal)"}, {"d": "Fri", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 46, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "Jun 14", "vol": "31 mi", "long": "13 mi", "note": "Peak long run — full race distance at easy pace. You'll know you can cover it.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Tue", "t": "hard", "txt": "Tune-up: 4mi @ 7:50"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 13 mi @ easy-steady"}, {"d": "Fri", "t": "easy", "txt": "Easy 6 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 47, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "Jun 21", "vol": "29.5 mi", "long": "11 mi", "note": "Peak week. Biggest goal-pace effort. Then we taper.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Goal-pace: 8mi @ 7:55"}, {"d": "Wed", "t": "easy", "txt": "Easy 5.5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 11 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 48, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "Jun 28", "vol": "19 mi", "long": "9 mi", "note": "Taper begins — volume drops, intensity stays sharp.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Goal-pace: 5mi @ 7:55"}, {"d": "Wed", "t": "easy", "txt": "—"}, {"d": "Thu", "t": "long", "txt": "Long 9 mi"}, {"d": "Fri", "t": "easy", "txt": "Easy 5 mi"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 49, "pc": "P4", "pname": "Half Build", "pink": "#712B13", "pbg": "#FAECE7", "dates": "Jul 05", "vol": "15.5 mi", "long": "7 mi", "note": "Taper underway — volume drops, legs feel springy and restless. That's correct.", "days": [{"d": "Mon", "t": "easy", "txt": "—"}, {"d": "Tue", "t": "hard", "txt": "Goal-pace: 4mi @ 7:55"}, {"d": "Wed", "t": "easy", "txt": "Easy 4.5 mi"}, {"d": "Thu", "t": "long", "txt": "Long 7 mi"}, {"d": "Fri", "t": "easy", "txt": "—"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "recovery", "txt": "Recovery / strength"}], "race": false}, {"n": 50, "pc": "P5", "pname": "Taper & Race", "pink": "#3C3489", "pbg": "#EEEDFE", "dates": "Jul 12", "vol": "13 mi", "long": "5 mi", "note": "Final taper week. Sleep, hydrate, carbs. Legs feel restless — trust it. Nothing new.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 4 mi"}, {"d": "Tue", "t": "easy", "txt": "—"}, {"d": "Wed", "t": "easy", "txt": "Easy 5 mi w/ 2mi @ goal"}, {"d": "Thu", "t": "easy", "txt": "—"}, {"d": "Fri", "t": "easy", "txt": "Easy 4 mi + 4x strides"}, {"d": "Sat", "t": "court", "txt": "Pickleball 2.5h"}, {"d": "Sun", "t": "rest", "txt": "—"}], "race": false}, {"n": 51, "pc": "P5", "pname": "Taper & Race", "pink": "#3C3489", "pbg": "#EEEDFE", "dates": "Jul 19", "vol": "~5 mi + race", "long": "13.1 mi RACE", "note": "Race day (Sun Jul 25). Go out at 8:05-8:10 for the first 3mi, settle, then decide at mile 9 if you have sub-8:00 in the tank.", "days": [{"d": "Mon", "t": "easy", "txt": "Easy 3 mi shakeout"}, {"d": "Tue", "t": "rest", "txt": "Rest"}, {"d": "Wed", "t": "easy", "txt": "Easy 2 mi + 3x20s strides"}, {"d": "Thu", "t": "rest", "txt": "Rest"}, {"d": "Fri", "t": "rest", "txt": "Rest or 15 min easy walk"}, {"d": "Sat", "t": "rest", "txt": "Rest / travel — race eve"}, {"d": "Sun", "t": "race", "txt": "🏁 RACE DAY"}], "race": true}];
+
+// Countdown
+const race = new Date(2027,6,25);
+const now = new Date();
+const wks = Math.max(0, Math.ceil((race-now)/(1000*60*60*24*7)));
+document.getElementById('countdown').textContent = wks;
+
+const PHASES = [
+  ["P1","Base","#0C447C","#E6F1FB"],
+  ["P2","Aerobic","#085041","#E1F5EE"],
+  ["P3","Speed","#854F0B","#FAEEDA"],
+  ["P4","Build","#712B13","#FAECE7"],
+  ["P5","Taper","#3C3489","#EEEDFE"],
+];
+
+// Tabs
+const tabsEl=document.getElementById('tabs');
+const allTab=document.createElement('div');
+allTab.className='tab active'; allTab.textContent='All'; allTab.style.background='#0F6E56';
+allTab.dataset.p='ALL';
+tabsEl.appendChild(allTab);
+PHASES.forEach(p=>{
+  const t=document.createElement('div');
+  t.className='tab'; t.textContent=p[0]+' '+p[1]; t.dataset.p=p[0];
+  t.dataset.ink=p[2];
+  tabsEl.appendChild(t);
+});
+
+const TAGLABEL={easy:"Easy",long:"Long",hard:"Key",rest:"Rest",court:"Court",race:"RACE",recovery:"Recov"};
+const DAYFULL={Mon:"Mon",Tue:"Tue",Wed:"Wed",Thu:"Thu",Fri:"Fri",Sat:"Sat",Sun:"Sun"};
+
+function render(filter){
+  const c=document.getElementById('weeks');
+  c.innerHTML='';
+  let lastP=null;
+  WEEKS.forEach(w=>{
+    if(filter!=='ALL' && w.pc!==filter) return;
+    if(w.pc!==lastP){
+      lastP=w.pc;
+      const ph=document.createElement('div');
+      ph.className='phase-head';
+      ph.style.background=w.pbg; ph.style.color=w.pink;
+      ph.textContent=w.pc+' · '+w.pname;
+      c.appendChild(ph);
+    }
+    const wk=document.createElement('div');
+    wk.className='week'+(w.race?' open':'');
+    const runDays=w.days.filter(d=>['easy','long','hard','race'].includes(d.t)).length;
+    wk.innerHTML=`
+      <div class="week-hd" onclick="this.parentElement.classList.toggle('open')">
+        <div class="left">
+          <div class="wk-badge" style="background:${w.pbg};color:${w.pink}">${w.n}</div>
+          <div class="wk-meta">
+            <div class="t">Week ${w.n}</div>
+            <div class="s">${w.dates} · ${runDays} runs${w.race?' · 🏁 race week':''}</div>
+          </div>
+        </div>
+        <div class="wk-right">
+          <div class="vol-pill">${w.vol}</div>
+          <div class="chev">▶</div>
+        </div>
+      </div>
+      <div class="week-body">
+        ${w.days.map(d=>{
+          const wknd=(d.d==='Sat'||d.d==='Sun');
+          const cls=d.t==='race'?'raceday':(wknd?'weekend':'');
+          const showTag=d.txt!=='—';
+          return `<div class="day ${cls}">
+            <div class="dl">${DAYFULL[d.d]}</div>
+            <div class="db t-${d.t}">${d.txt}${showTag&&d.t!=='rest'?` <span class="tag">${TAGLABEL[d.t]}</span>`:''}</div>
+          </div>`;
+        }).join('')}
+        ${w.note?`<div class="note">${w.note}</div>`:''}
+      </div>`;
+    c.appendChild(wk);
+  });
+}
+
+tabsEl.addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(!t) return;
+  document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('active'); x.style.background='#fff'; x.style.color='#6B6B6B';});
+  t.classList.add('active');
+  const ink=t.dataset.ink||'#0F6E56';
+  t.style.background = t.dataset.p==='ALL' ? '#0F6E56' : ink;
+  t.style.color='#fff';
+  render(t.dataset.p);
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+render('ALL');
+</script>
+</body>
+</html>
