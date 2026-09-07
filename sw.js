@@ -1,4 +1,4 @@
-const CACHE = 'hm-plan-v2';
+const CACHE = 'hm-plan-v3';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -20,12 +20,13 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// Network-first so plan edits show up on next open; cached copy is the offline fallback.
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+    fetch(e.request).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return res;
-    }).catch(() => cached))
+    }).catch(() => caches.match(e.request))
   );
 });
