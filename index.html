@@ -312,7 +312,7 @@ function render(filter){
     const wk=document.createElement('div');
     const isCurrent = status==='current';
     wk.className='week'+(w.race||isCurrent?' open':'')+(isCurrent?' is-current':'');
-    const runDays=w.days.filter(d=>['easy','long','hard','race'].includes(d.t)).length;
+    const runDays=w.days.filter(d=>['easy','long','hard','race'].includes(d.t) && d.txt!=='—').length;
     wk.innerHTML=`
       <div class="week-hd" onclick="this.parentElement.classList.toggle('open')">
         <div class="left">
